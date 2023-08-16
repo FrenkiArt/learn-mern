@@ -1,5 +1,6 @@
 import express from "express";
 import multer from "multer";
+import cors from "cors";
 import mongoose from "mongoose";
 import {
   registerValidation,
@@ -8,11 +9,14 @@ import {
 } from "./validations/validations.js";
 import { checkAuth, handleValidationErrors } from "./utils/index.js";
 import { UserController, PostController } from "./controllers/index.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const dbUrl = process.env.DB_URL;
 
 mongoose
-  .connect(
-    "mongodb+srv://artywork:1Artywork@cluster0.zppxpbn.mongodb.net/blog?retryWrites=true&w=majority"
-  )
+  .connect(dbUrl)
   .then(() => {
     console.log("DB is OK");
   })
@@ -34,6 +38,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.use(express.json());
+app.use(cors());
 
 const htmlBody = (slot) => {
   return `
@@ -71,6 +76,7 @@ app.post("/uploads", checkAuth, upload.single("image"), async (req, res) => {
 app.use("/uploads", express.static("uploads"));
 
 app.get("/posts", PostController.getAll);
+app.get("/tags", PostController.getLastTags);
 app.get("/posts/:id", PostController.getOne);
 app.post(
   "/posts",
